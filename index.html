@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Demo WebRTC</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="jquery.js"></script>
+        <script src="peer.js"></script>
+        <script src="socket.io.js"></script>
+    </head>
+    <body>
+        <h1>Demo Live Stream - WebRTC</h1>
+        <div id="boxSignup">
+            <input id="userName" type="text" placeholder="User Name">
+            <input id="btnSignup" type="button" value="Sign Up">
+        </div>
+        <div id="boxChat">
+            <button id="btnLogout">LogOut</button>
+            <h2>Current ID: <span id="id_peer"></span></h2>
+            <div class="rowInput">
+                <input id="remoteId" type="text" placeholder="Remote ID">
+                <input id="buttonRemote" type="button" value="Call">
+            </div>
+            <div id="wrapper">
+                <div class="boxVideo">
+                    <video id="localStream" width="450" controls></video>
+                </div>
+                <div class="boxVideo">
+                    <video id="remoteStream" width="450" controls></video>
+                </div>
+            </div>
+            <div id="onlineUsers"></div>
+        </div>
+    </body>
+    <script src="main.js"></script>
+</html>
