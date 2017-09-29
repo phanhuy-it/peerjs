@@ -1,71 +1,85 @@
-const socket = io('https://phanhuypeerjs.herokuapp.com/');
-
-
-$('#boxChat').hide();
+//Set up server
+const socket = io('http://localhost:3000');
 
 function openStream() {
-    const config = { audio: false, video: true };
-    return navigator.mediaDevices.getUserMedia(config);
+	const config = { audio: false, video: true };
+	return navigator.mediaDevices.getUserMedia( config );
 }
+
 function playStream(idVideoTag, stream) {
-    const video = document.getElementById(idVideoTag);
-    video.srcObject = stream;
-    video.play();
+	const video = document.getElementById(idVideoTag);
+	video.srcObject = stream;
+	video.play();
 }
 
-// openStream()
-// .then(stream => playStream('localStream', stream));
-
-const peer = new Peer({ key: 'peerjs', host: 'https://phanhuypeerjs.herokuapp.com/', secure: 'true', port: '443' });
+const peer = new Peer({ key: 'tkv5g2acaree9udi' });
 peer.on('open', id => {
-    $('#id_peer').append(id);
+    $('#idPeer').html(id);
+    
+    //Sign Up
     $('#btnSignup').click(() => {
-        const username = $('#userName').val();
-        socket.emit('NGUOI_DUNG_DANG_KY', {ten: username, peerId: id});
+        const username = $('#txtUserName').val();
+        socket.emit('NGUOI_DUNG_DANG_KY', { ten: username, peerId: id });
     });
 
+    $('#btnLogout').click(() => {
+        socket.emit('NGUOI_DUNG_DA_THOAT', id);
+    });
+    
+    //load danh sach user online
+    socket.on('DANH_SACH_USER_ONLINE', arrUserInfo => {
+        $('#onlineUsers').html('');
+        arrUserInfo.forEach(user => {
+            if(user.peerId !== id) {
+                const { ten, peerId } = user;
+                $('#onlineUsers').append(`<p class="user" id="${peerId}">${ten}</p>`)
+            }
+        });
+    });
 });
 
-socket.on('CO_NGUOI_DUNG_MOI', arr_userInfo => {
-    $('#onlineUsers').html('');
-    arr_userInfo.forEach(user => {
-        const { ten, peerId } = user;
-        $('#onlineUsers').append(`<p id="${peerId}" class="user">${peerId} : <span class="name">${ten}</span></p>`)
-    });
-    socket.on('CO_NGUOI_NGAT_KET_NOI', peerId => {
-        $('#${peerId}').remove();
-    });
-});
+$('#boxSignup').show();
+$('#boxChat').hide();
+
 
 socket.on('DANG_KY_THAT_BAI', () => {
-    alert('Vui long nhap User Name khac');
+    alert('Nguoi dung da ton tai');
 });
 
 socket.on('DANG_KY_THANH_CONG', () => {
-    $('#boxChat').show();
     $('#boxSignup').hide();
+    $('#boxChat').show();
 });
 
-$('#btnLogout').click(function() {
-    socket.emit('CO_NGUOI_NGAT_KET_NOI');
-    $('#boxChat').hide();
+socket.on('DA_THOAT_THANH_CONG', () => {
+    $('#txtUserName').val('');
     $('#boxSignup').show();
+    $('#boxChat').hide();
 });
 
 
-
-
-
-
-// Caller
+//Caller
 $('#buttonRemote').click(() => {
     const id = $('#remoteId').val();
+    socket.emit('NGUOI_DUNG_GOI_DI', id);
+});
+
+$('#onlineUsers').on('click', 'p', function() {
+    var peerId = $(this).attr('id');
+    socket.emit('NGUOI_DUNG_GOI_DI', peerId);
+});
+
+socket.on('GOI_DI_THANH_CONG', id => {
     openStream()
     .then(stream => {
         playStream('localStream', stream);
         const call = peer.call(id, stream);
         call.on('stream', remoteStream => playStream('remoteStream', remoteStream));
     });
+});
+
+socket.on('GOI_DI_THAT_BAI', () => {
+    alert('Khong co dia chi nay');
 });
 
 peer.on('call', call => {
@@ -78,12 +92,3 @@ peer.on('call', call => {
 });
 
 
-$('#onlineUsers').on('click', 'p', function() {
-    var id = $(this).attr('id');
-    openStream()
-    .then(stream => {
-        playStream('localStream', stream);
-        const call = peer.call(id, stream);
-        call.on('stream', remoteStream => playStream('remoteStream', remoteStream));
-    });
-});

@@ -1,26 +1,42 @@
-const io = require('socket.io')(80);
+const io = require('socket.io')(3000);
 
-const arr_userInfo = [];
+
+const arrUserInfo = [];
 
 io.on('connection', socket => {
-    console.log(socket.id);
+    // console.log(socket.id);
+
     socket.on('NGUOI_DUNG_DANG_KY', user => {
-        const isExist = arr_userInfo.some(e => e.ten === user.ten);
+        socket.peerId = user.peerId;
+        const isExist = arrUserInfo.some(e => e.ten === user.ten);
         if(isExist) {
-            return socket.emit('DANG_KY_THAT_BAI');
+            return socket.emit('DANG_KY_THAT_BAI')
         } else {
-            socket.peerId = user.peerId;
-            arr_userInfo.push(user);
-            io.sockets.emit('CO_NGUOI_DUNG_MOI', arr_userInfo);
+            arrUserInfo.push(user);
+            io.sockets.emit('DANH_SACH_USER_ONLINE', arrUserInfo);
             socket.emit('DANG_KY_THANH_CONG');
         }
     });
-    
-    socket.on('CO_NGUOI_NGAT_KET_NOI', () => {
-        const index = arr_userInfo.findIndex(user => user.peerId === socket.peerId);
-        arr_userInfo.splice(index, 1);
-        io.sockets.emit('CO_NGUOI_DUNG_MOI', arr_userInfo);
+
+    socket.on('disconnect', () => {
+        const index = arrUserInfo.findIndex( user => user.peerId === socket.peerId );
+        arrUserInfo.splice(index, 1);
+        io.sockets.emit('DANH_SACH_USER_ONLINE', arrUserInfo);
+    });
+
+    socket.on('NGUOI_DUNG_DA_THOAT', peerId => {
+        const index = arrUserInfo.findIndex( user => user.peerId === peerId );
+        arrUserInfo.splice(index, 1);
+        io.sockets.emit('DANH_SACH_USER_ONLINE', arrUserInfo);
+        socket.emit('DA_THOAT_THANH_CONG');
+    });
+
+    socket.on('NGUOI_DUNG_GOI_DI', id => {
+        const isExist = arrUserInfo.some(e => e.peerId === id);
+        if(isExist) {
+            socket.emit('GOI_DI_THANH_CONG', id);
+        } else {
+            socket.emit('GOI_DI_THAT_BAI');
+        }
     });
 });
-
-
